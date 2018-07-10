@@ -3,10 +3,6 @@ d3.csv('fifa_ranking.csv')
 		let fifa_ranking_data = fifa_ranking.slice(0, 10).sort((a, b) => {
 			return b.previous_points - a.previous_points
 		})
-		const dataset = []
-		fifa_ranking_data.forEach(data_fifa_ranking => {
-			dataset.push(data_fifa_ranking.previous_points)
-		});
 
 		const svg = d3
 			.select('#chartBar')
@@ -38,44 +34,50 @@ d3.csv('world_cups.csv')
 		dataWC.sort((a, b) => {
 			return a.GoalsScored - b.GoalsScored
 		})
-		const svg = d3
-			.select('#chartBar1')
-			.append('svg')
-			.attr('width', 800)
-			.attr('height', 500)
-			.style('background', '#b0e0e6')
 
 		const margin = {
 			top: 50,
 			right: 50,
-			bottom: 20,
-			left: 20
+			bottom: 50,
+			left: 50
 		}
-		const width = 870 - margin.left - margin.right
-		const height = 550 - margin.top - margin.bottom
+		const width = 800 - margin.left - margin.right
+		const height = 600 - margin.top - margin.bottom
 
+		const svg = d3
+			.select('#chartBar1')
+			.append('svg')
+			.attr('width', width + margin.left + margin.right)
+			.attr('height', height + margin.top + margin.bottom)
+			.append('g')
+			.attr('transform', 'translate(' + margin.left + "," + margin.top + ')')
+			.style('background', '#b0e0e6')
+
+		let min = +dataWC[0].GoalsScored
+		let max = +(dataWC[dataWC.length - 1].GoalsScored)
+		console.log(max)
 
 		const x = d3.scaleBand()
 			.range([0, width])
 
 		const y = d3.scaleBand()
-			.range([height, 0])
+			.range([max, 0])
 
 		x.domain(dataWC.map(function (d) {
 			return d.Year
 		}))
 
-		y.domain([0, d3.max(dataWC, function (d) {
-			return d.GoalsScored
-		})])
+		y.domain([min, max])
 
-		let min = +dataWC[0].GoalsScored
-		let max = +(dataWC[dataWC.length - 1].GoalsScored)
 
 		const colorScale = d3
 			.scaleLinear()
 			.domain([min, max])
 			.range(['red', 'green'])
+
+		const yScale = d3.scaleLinear()
+			.domain([0, max])
+			.range([0, 160])
 
 		svg
 			.selectAll('rect')
@@ -83,19 +85,18 @@ d3.csv('world_cups.csv')
 			.enter()
 			.append('rect')
 			.attr('class', 'bar1')
-			.attr('padding-left', 30)
 			.attr('fill', ({
 				GoalsScored
 			}) => {
 				return colorScale(GoalsScored)
 			})
 			.attr('x', (d, i) => {
-				return i * 40
+				return i * 35
 			})
 			.attr('y', ({
 				GoalsScored
 			}) => {
-				return (320 - GoalsScored) - 30
+				return (max+27)- GoalsScored
 			})
 			.attr('width', 30)
 			.transition()
@@ -106,8 +107,17 @@ d3.csv('world_cups.csv')
 			.attr('height', ({
 				GoalsScored
 			}) => {
-				return GoalsScored * 50
+				return GoalsScored -27
 			})
+
+		svg
+			.append('g')
+			.attr('transform', 'translate(0,' + max + ')')
+			.call(d3.axisBottom(x))
+
+		svg
+			.append('g')
+			.call(d3.axisLeft(y))
 
 		svg
 			.selectAll('text')
@@ -173,7 +183,6 @@ d3.csv('world_cups.csv')
 			}) => {
 				return [`Year: ${Year}, Total: ${GoalsScored} goal`]
 			})
-
 	})
 	.catch(err => {
 		throw err
@@ -235,7 +244,8 @@ d3.csv('world_cups.csv')
 				return color(d.data.GoalsScored)
 			})
 		g.append('text')
-			.transition().duration(1000)
+			.transition()
+			.duration(1000)
 			.attr('transform', function (d) {
 				return 'translate(' + labelArc.centroid(d) + ')'
 			})
